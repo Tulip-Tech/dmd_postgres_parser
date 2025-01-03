@@ -1,10 +1,14 @@
 import argparse
 import glob
+from dotenv import load_dotenv
 import os
 import xml.etree.ElementTree as ET
 
 import psycopg2
 
+
+# Load environment variables from the .env file (if present)
+load_dotenv()
 
 def monotabular(path, concept_name):
     tree = ET.parse(path)
@@ -46,23 +50,25 @@ def polytabular(path, concept_name):
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--directory', type=str, required=True,
                     help='directory containing the unzipped nhsbsa_dmd... folders')
-parser.add_argument('-u', '--username', type=str, required=True,
-                    help='username of your PostgreSQL database')
-parser.add_argument('-p', '--password', type=str, required=True,
-                    help='password of the PostgreSQL database corresponding to the username')
-parser.add_argument('-H', '--host', type=str, default='localhost',
-                    help='host of the PostgreSQL database')
-parser.add_argument('-P', '--port', type=int, default=5432,
-                    help='port of the PostgreSQL database')
 args = parser.parse_args()
 
 rootpath = args.directory
-username = args.username
-password = args.password
-host = args.host
-port = args.port
 
-cnx = psycopg2.connect(user=username, password=password, host=host, port=port, dbname='postgres')
+# Access environment variables as if they came from the actual environment
+username = os.getenv('DATABASE_USER')
+password = os.getenv('DATABASE_PASSWORD')
+host = os.getenv('DATABASE_HOST')
+port = os.getenv('DATABASE_PORT')
+db_name = os.getenv('DATABASE_NAME')
+
+# Example usage
+print(f'DATABASE_USER: {username}')
+print(f'DATABASE_PASSWORD: {password}')
+print(f'DATABASE_HOST: {host}')
+print(f'DATABASE_port: {port}')
+print(f'DATABASE_db_name: {db_name}')
+
+cnx = psycopg2.connect(user=username, password=password, host=host, port=port, dbname=db_name)
 cnx.autocommit = True
 cursor = cnx.cursor()
 
@@ -77,7 +83,6 @@ concepts = [
     ("f_vmpp2_3{}.xml", "vmpp", polytabular),
     ("f_ampp2_3{}.xml", "ampp", polytabular)
 ]
-
 os.chdir(rootpath)
 dmddirs = glob.glob("nhsbsa_dmd_*_*")
 if len(dmddirs) == 0:
@@ -102,6 +107,29 @@ for dmddir in dmddirs:
         filename = glob.glob(con[0].format("*"))[0]
         print("Parsing concept " + con[1])
         con[2](filename, con[1])
+
+    # SQL command to add the column
+    #cursor.execute('ALTER TABLE lookup_supplier ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
+    #cursor.execute('ALTER TABLE vmp_vmps ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
+    #cursor.execute('ALTER TABLE amp_amps ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
+    #cursor.execute('ALTER TABLE vtm_virtual_therapeutic_moieties ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
+    #cursor.execute('ALTER TABLE lookup_unit_of_measure ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
+    #cursor.execute('ALTER TABLE lookup_ont_form_route ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
+    #cursor.execute('ALTER TABLE vmp_ont_drug_form ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
+    #cursor.execute('ALTER TABLE lookup_route ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
+    #cursor.execute('ALTER TABLE vmp_drug_route ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
+    #cursor.execute('ALTER TABLE lookup_form ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
+    #cursor.execute('ALTER TABLE vmp_drug_form ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
+
+
+
+    # data insert to process nsh queue list
+    insert_command = "INSERT INTO medicine.nhs_medicine_api_data_process (schema_name, status) VALUES (%s, %s);"
+    data = (format(schema_name), 1)  # Example data
+
+    # Execute the command
+    cursor.execute(insert_command, data)
+    print("Data inserted successfully into 'medicine.nhs_medicine_api_data_process' table.")
 
     cnx.commit()
     print("Done")
