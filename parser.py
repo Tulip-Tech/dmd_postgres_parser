@@ -108,22 +108,6 @@ for dmddir in dmddirs:
         filename = glob.glob(con[0].format("*"))[0]
         print("Parsing concept " + con[1])
         con[2](filename, con[1])
-
-    # SQL command to add the column
-    #cursor.execute('ALTER TABLE lookup_supplier ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
-    #cursor.execute('ALTER TABLE vmp_vmps ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
-    #cursor.execute('ALTER TABLE amp_amps ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
-    #cursor.execute('ALTER TABLE vtm_virtual_therapeutic_moieties ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
-    #cursor.execute('ALTER TABLE lookup_unit_of_measure ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
-    #cursor.execute('ALTER TABLE lookup_ont_form_route ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
-    #cursor.execute('ALTER TABLE vmp_ont_drug_form ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
-    #cursor.execute('ALTER TABLE lookup_route ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
-    #cursor.execute('ALTER TABLE vmp_drug_route ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
-    #cursor.execute('ALTER TABLE lookup_form ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
-    #cursor.execute('ALTER TABLE vmp_drug_form ADD COLUMN "isSynchronized" BOOLEAN DEFAULT FALSE;')
-
-
-
     #data insert to process nsh queue list
     insert_command = "INSERT INTO medicine.nhs_medicine_api_data_process (schema_name, status) VALUES (%s, %s);"
     data = (format(schema_name), 1)  # Example data
