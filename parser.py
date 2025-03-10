@@ -3,7 +3,7 @@ import glob
 from dotenv import load_dotenv
 import os
 import xml.etree.ElementTree as ET
-
+import shutil
 import psycopg2
 
 
@@ -47,12 +47,11 @@ def polytabular(path, concept_name):
             cursor.execute(sql, values)
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--directory', type=str, required=True,
-                    help='directory containing the unzipped nhsbsa_dmd... folders')
-args = parser.parse_args()
+# parser = argparse.ArgumentParser()
+# parser.add_argument('-d', '--directory', type=str, required=True,
+#                     help='directory containing the unzipped nhsbsa_dmd... folders')
+# args = parser.parse_args()
 
-rootpath = args.directory
 
 # Access environment variables as if they came from the actual environment
 username = os.getenv('DATABASE_USER')
@@ -60,6 +59,7 @@ password = os.getenv('DATABASE_PASSWORD')
 host = os.getenv('DATABASE_HOST')
 port = os.getenv('DATABASE_PORT')
 db_name = os.getenv('DATABASE_NAME')
+rootpath = os.getenv('TRUD_FILE_EXTRACT_LOCATION')
 
 # Example usage
 print(f'DATABASE_USER: {username}')
@@ -88,6 +88,7 @@ dmddirs = glob.glob("nhsbsa_dmd_*_*")
 if len(dmddirs) == 0:
     raise Exception("No dm+d directories in the path given")
 for dmddir in dmddirs:
+    print(f"Processing {dmddir}")
     if not os.path.isdir(dmddir):  # we don't want to match zip
         print("Skipping " + dmddir)
         continue
@@ -123,7 +124,7 @@ for dmddir in dmddirs:
 
 
 
-    # data insert to process nsh queue list
+    #data insert to process nsh queue list
     insert_command = "INSERT INTO medicine.nhs_medicine_api_data_process (schema_name, status) VALUES (%s, %s);"
     data = (format(schema_name), 1)  # Example data
 
@@ -132,6 +133,7 @@ for dmddir in dmddirs:
     print("Data inserted successfully into 'medicine.nhs_medicine_api_data_process' table.")
 
     cnx.commit()
+    shutil.rmtree(rootpath+"/"+dmddir)
     print("Done")
 
 cursor.close()
